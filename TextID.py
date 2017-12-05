@@ -1,6 +1,4 @@
 
-# TextID code 
-
 from collections import defaultdict
 from porter import create_stem
 
@@ -10,7 +8,7 @@ from math import ceil, floor
 
 def float_round(num, places = 0):
     return float(str(round(num, places)))
-# code of float_round to round to 2 decimals was written by Patrick Perini and used for the project
+# code of float_round to round to 2 decimals
 
 
 def printAllDictionaries( TM ):
@@ -124,7 +122,7 @@ def makeStems(s):
     
     stems = {}
 
-    for l in stl: # iterate through words in the list
+    for l in stl: # iterate through stems in the list
         if l not in stems:
             stems[l] = 1 # if not in dictionary add
         elif l in stems:
@@ -158,17 +156,17 @@ def normalizeDictionary(d):
     sumValues = sum(values)
   
     for k in d:
-        s = d[k]/sumValues
+        s = d[k]/sumValues # divide value by sum of values to normalize
         d[k] = s
     return d
 
 def smallestValue(nd1, nd2):
     """ take in any two model-dictionaries nd1 and nd2, return the smallest positive (non-zero) value across both"""
   
-    valuesd1 = list(nd1.values())
+    valuesd1 = list(nd1.values()) # list values of each dictionary
     valuesd2 = list(nd2.values())
 
-    if min(valuesd1) < min(valuesd2):
+    if min(valuesd1) < min(valuesd2): #check which one is the smallest
         return min(valuesd1)
     else:
         return min(valuesd2)
@@ -178,17 +176,17 @@ def compareDictionaries(d, nd1, nd2):
     the log-probability that dictionary d arose from the distribution of data in normalized dictionary nd2 and return both values"""
 
     total_log_prob1 = 0.0
-    total_log_prob2 = 0.0
-    epsilon = 0.5*smallestValue(nd1, nd2)
+    total_log_prob2 = 0.0 # initializing probability to zero
+    epsilon = 0.5*smallestValue(nd1, nd2) # creating an epsilon case
 
-    for k in d:
+    for k in d: # iterate through keys in the dictionary
         if k in nd1:
-            total_log_prob1 += d[k]*math.log(nd1[k])
+            total_log_prob1 += d[k]*math.log(nd1[k]) # if it is in the dictionary, compute log probability
         else:
-            total_log_prob1 += d[k]*math.log(epsilon)
+            total_log_prob1 += d[k]*math.log(epsilon) # otherwise use epsilon
 
     for k in d:
-        if k in nd2:
+        if k in nd2: # repeating loop for second dictionary
             total_log_prob2 += d[k]*math.log(nd2[k])
         else:
             total_log_prob2 += d[k]*math.log(epsilon)
@@ -198,12 +196,12 @@ def compareDictionaries(d, nd1, nd2):
 def createAllDictionaries(s): 
         """ should create out all five of self's dictionaries in full - for testing and 
             checking how they are working """
-        sentencelengths = makeSentenceLengths(s)
+        sentencelengths = makeSentenceLengths(s) 
         new_s = cleanString(s)
-        words = makeWords(new_s)
-        stems = makeStems(new_s)
-        punct = makePunctuation(s)
-        wordlengths = makeWordLengths(new_s)
+        words = makeWords(new_s) #creates words dictionary
+        stems = makeStems(new_s) # creates stems dictionary 
+        punct = makePunctuation(s) # creates punctuation dictionary
+        wordlengths = makeWordLengths(new_s) # creates word lengths dictionaries
         return [words, wordlengths, stems, sentencelengths, punct ]
 
 def compareTextWithTwoModels(newmodel, model1, model2):
@@ -237,18 +235,18 @@ def compareTextWithTwoModels(newmodel, model1, model2):
     R4 = compareDictionaries(newmodel[4], model1[4], model2[4])
     print("punctuation     ",  float_round(R4[0], 2), "     ", float_round(R4[1], 2))
 
-    model1features = 0
+    model1features = 0 # initialize features to 0
     model2features = 0
-    rows = [R0,R1,R2,R3,R4]
+    rows = [R0,R1,R2,R3,R4] # create array of rows (or the dictionaries) to go through
 
     for i in rows:
         print("")
-        if i[0] > i[1]:
+        if i[0] > i[1]: # compares model features and awards feature to model whose value is higher
             model1features += 1
         else:
             model2features += 1
 
-    print("Model 1 wins on", model1features, "features!")
+    print("Model 1 wins on", model1features, "features!") # printing out which model wins
     print("Model 2 wins on", model2features, "features!")
 
     if model1features > model2features: # model 1 wins with more features
