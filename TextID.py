@@ -1,30 +1,17 @@
-#
-# milestone.py
-# TextID
-# Names: Rakia Segev and Anisha Tandon
-#
+
+# TextID code 
 
 from collections import defaultdict
 from porter import create_stem
 
-TextModel1 = [ ]  # start with the empty list
+import math
 
-words1 = defaultdict( int )  # default dictionary for counting
-TextModel1 = TextModel1 + [ words1 ]  # add that dictionary in...
+from math import ceil, floor
 
-wordlengths1 = defaultdict( int )  # default dictionary for counting
-TextModel1 = TextModel1 + [ wordlengths1 ]  # add that dictionary in...
+def float_round(num, places = 0):
+    return float(str(round(num, places)))
+# code of float_round to round to 2 decimals was written by Patrick Perini and used for the project
 
-stems1 = defaultdict( int )  # default dictionary for counting
-TextModel1 = TextModel1 + [ stems1 ]  # add that dictionary in...
-
-sentencelengths1 = defaultdict( int )  # default dictionary for counting
-TextModel1 = TextModel1 + [ sentencelengths1 ]  # add that dictionary in...
-
-complexity1 = defaultdict( int )
-TextModel1 = TextModel1 + [complexity1]  # add that dictionary in...
-
-# a function to print all of the dictionaries in a TextModel1
 
 def printAllDictionaries( TM ):
     """ a function to print all of the dictionaries in TM
@@ -77,10 +64,6 @@ def makeSentenceLengths(s):
         elif l in sentencelengths:
             sentencelengths[l] += 1
     return sentencelengths
-
-print("TextModel1:")
-printAllDictionaries( TextModel1 )
-
 
 def cleanString(s): 
     """ takes in a string s and return a string with no punctuation and no upper-case letters""" 
@@ -159,8 +142,6 @@ def makePunctuation(s):
         if punctuation in "!.?,'": # check if an index is a punctuation
             pl += [punctuation]
 
-    print(pl)
-
     punctuationdictionary = {}
 
     for p in pl: # iterate through punctuation in the array
@@ -169,3 +150,115 @@ def makePunctuation(s):
         elif p in punctuationdictionary:
             punctuationdictionary[p] += 1 # if in dictionary add to number
     return punctuationdictionary
+
+def normalizeDictionary(d):
+    """ take in any single one of the model-dictionaries d and return a normalized version, numbers adding to 1"""
+    
+    values = d.values() # lists value in dictionary d
+    sumValues = sum(values)
+  
+    for k in d:
+        s = d[k]/sumValues
+        d[k] = s
+    return d
+
+def smallestValue(nd1, nd2):
+    """ take in any two model-dictionaries nd1 and nd2, return the smallest positive (non-zero) value across both"""
+  
+    valuesd1 = list(nd1.values())
+    valuesd2 = list(nd2.values())
+
+    if min(valuesd1) < min(valuesd2):
+        return min(valuesd1)
+    else:
+        return min(valuesd2)
+
+def compareDictionaries(d, nd1, nd2):
+    """ return the log-probability that the dictionary d arose from the distribution of data in the normalized dictionary nd1 and
+    the log-probability that dictionary d arose from the distribution of data in normalized dictionary nd2 and return both values"""
+
+    total_log_prob1 = 0.0
+    total_log_prob2 = 0.0
+    epsilon = 0.5*smallestValue(nd1, nd2)
+
+    for k in d:
+        if k in nd1:
+            total_log_prob1 += d[k]*math.log(nd1[k])
+        else:
+            total_log_prob1 += d[k]*math.log(epsilon)
+
+    for k in d:
+        if k in nd2:
+            total_log_prob2 += d[k]*math.log(nd2[k])
+        else:
+            total_log_prob2 += d[k]*math.log(epsilon)
+    
+    return [total_log_prob1, total_log_prob2]
+
+def createAllDictionaries(s): 
+        """ should create out all five of self's dictionaries in full - for testing and 
+            checking how they are working """
+        sentencelengths = makeSentenceLengths(s)
+        new_s = cleanString(s)
+        words = makeWords(new_s)
+        stems = makeStems(new_s)
+        punct = makePunctuation(s)
+        wordlengths = makeWordLengths(new_s)
+        return [words, wordlengths, stems, sentencelengths, punct ]
+
+def compareTextWithTwoModels(newmodel, model1, model2):
+    """ run compareDictionaries for all features in dictionaries newmodel, model1, and model2 """ 
+
+    print("SUMMARY OF COMPARISON:")
+    print(" ")
+    print("name            vsModel1    vsModel2")
+    print("____________________________________________")
+
+    newmodel = createAllDictionaries(readTextFromFile(newmodel)) #creating the dictionaries from input text
+    model1 = createAllDictionaries(readTextFromFile(model1))
+    model2 = createAllDictionaries(readTextFromFile(model2))
+
+    for i in range(5):
+        normalizeDictionary(model1[i])
+        normalizeDictionary(model2[i])
+
+    R0 = compareDictionaries(newmodel[0], model1[0], model2[0]) # comparing the values for first dictionary generated
+    print("words           ", float_round(R0[0], 2), "   ", float_round(R0[1], 2) ) #printing results of comparison
+
+    R1 = compareDictionaries(newmodel[1], model1[1], model2[1])
+    print("wordlengths     ", float_round(R1[0], 2), "   ", float_round(R1[1], 2) )
+    
+    R2 = compareDictionaries(newmodel[2], model1[2], model2[2])
+    print("stems           ",  float_round(R2[0], 2), "   ", float_round(R2[1], 2))
+    
+    R3 = compareDictionaries(newmodel[3], model1[3], model2[3])
+    print("sentencelengths ",  float_round(R3[0], 2), "     ", float_round(R3[1], 2))
+    
+    R4 = compareDictionaries(newmodel[4], model1[4], model2[4])
+    print("punctuation     ",  float_round(R4[0], 2), "     ", float_round(R4[1], 2))
+
+    model1features = 0
+    model2features = 0
+    rows = [R0,R1,R2,R3,R4]
+
+    for i in rows:
+        print("")
+        if i[0] > i[1]:
+            model1features += 1
+        else:
+            model2features += 1
+
+    print("Model 1 wins on", model1features, "features!")
+    print("Model 2 wins on", model2features, "features!")
+
+    if model1features > model2features: # model 1 wins with more features
+        print("--- Model 1 wins!!! --- ")
+    elif model1features < model2features: # model 2 wins with more features
+        print("--- Model 2 wins!!! --- ")
+    else: # otherwise if there is a tie, the one whose words score is higher wins
+        if R0[0] > R0[1]:
+            print("--- Model 1 wins!!! --- ")
+        else:
+            print("--- Model 2 wins!!! --- ")
+
+
